@@ -126,3 +126,46 @@ form.addEventListener('submit', e => {
 
 
 
+
+const searchInput = document.getElementById("searchInput");
+        const searchResults = document.getElementById("searchResults");
+        let matches = []; // Store matching indexes in the array.
+
+        searchInput.addEventListener("input", function () {
+            const searchTerm = searchInput.value;
+            searchResults.innerHTML = "";
+            matches = []; // Reset the matches array.
+
+            if (searchTerm) {
+                findMatchingIndexes(searchTerm);
+                highlightMatches(searchTerm);
+            }
+        });
+
+        function findMatchingIndexes(searchTerm) {
+            const pageText = document.body.innerText;
+            const regExp = new RegExp(searchTerm, "g");
+            let match;
+            while ((match = regExp.exec(pageText)) !== null) {
+                matches.push({ start: match.index, end: match.index + searchTerm.length });
+            }
+        }
+
+        function highlightMatches(searchTerm) {
+            const pageText = document.body.innerText;
+            let highlightedText = '';
+
+            let currentIndex = 0;
+            for (const match of matches) {
+                const beforeMatch = pageText.substring(currentIndex, match.start);
+                const matchedText = pageText.substring(match.start, match.end);
+                currentIndex = match.end;
+
+                highlightedText += beforeMatch + `<span class="highlight">${matchedText}</span>`;
+            }
+
+            // Append any remaining text after the last match.
+            highlightedText += pageText.substring(currentIndex);
+
+            searchResults.innerHTML = highlightedText;
+        }
