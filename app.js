@@ -127,45 +127,67 @@ form.addEventListener('submit', e => {
 
 
 
+
+
 const searchInput = document.getElementById("searchInput");
-        const searchResults = document.getElementById("searchResults");
-        let matches = []; // Store matching indexes in the array.
+const content = document.getElementById("content");
+const showDetailsButton = document.getElementById("showDetailsButton");
+let currentMatch = null;
 
-        searchInput.addEventListener("input", function () {
-            const searchTerm = searchInput.value;
-            searchResults.innerHTML = "";
-            matches = []; // Reset the matches array.
+searchInput.addEventListener("input", function () {
+    const searchTerm = searchInput.value.toLowerCase();
+    const pageText = content.textContent.toLowerCase();
 
-            if (searchTerm) {
-                findMatchingIndexes(searchTerm);
-                highlightMatches(searchTerm);
-            }
+    if (searchTerm) {
+        const regExp = new RegExp(searchTerm, "g");
+        const markedText = pageText.replace(regExp, (match) => {
+            // Create an anchor link with SweetAlert popup for matched word
+            const anchorLink = `<a href="#" onclick="showPopup('${match}');">${match}</a>`;
+            currentMatch = match;
+            showDetailsButton.style.display = "block";
+            return `<mark>${anchorLink}</mark>`;
         });
+        content.innerHTML = markedText;
+    } else {
+        // If the search input is empty, reset the content to its original state.
+        content.innerHTML = pageText;
+        currentMatch = null;
+        showDetailsButton.style.display = "none";
+    }
+});
 
-        function findMatchingIndexes(searchTerm) {
-            const pageText = document.body.innerText;
-            const regExp = new RegExp(searchTerm, "g");
-            let match;
-            while ((match = regExp.exec(pageText)) !== null) {
-                matches.push({ start: match.index, end: match.index + searchTerm.length });
-            }
+showDetailsButton.addEventListener("click", function () {
+    if (currentMatch) {
+        showPopup(currentMatch);
+    }
+});
+
+function showPopup(word) {
+    const fullDetails = getFullDetails(word); // Replace this with your own function to retrieve details for the word.
+    Swal.fire({
+        title: 'Matched Word Details',
+        html: fullDetails,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'OK',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            navigateToWord(word);
+            window.location.reload(); // Reload the page after clicking "OK"
         }
+    });
+}
 
-        function highlightMatches(searchTerm) {
-            const pageText = document.body.innerText;
-            let highlightedText = '';
+function getFullDetails(word) {
+    // Replace this with your own function to retrieve details for the word.
+    return `Full details for the word "${word}" go here.`;
+}
 
-            let currentIndex = 0;
-            for (const match of matches) {
-                const beforeMatch = pageText.substring(currentIndex, match.start);
-                const matchedText = pageText.substring(match.start, match.end);
-                currentIndex = match.end;
-
-                highlightedText += beforeMatch + `<span class="highlight">${matchedText}</span>`;
-            }
-
-            // Append any remaining text after the last match.
-            highlightedText += pageText.substring(currentIndex);
-
-            searchResults.innerHTML = highlightedText;
-        }
+function navigateToWord(word) {
+    // Implement navigation to the selected word, e.g., by scrolling to it.
+    const element = document.querySelector(`[name="${word}"]`);
+    if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+    }
+}
